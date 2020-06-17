@@ -1,6 +1,7 @@
 class Vendedor {
 
 	const certificaciones = []
+	var property modoDeOperar
 
 	// Patrón: Template method. Sirve cuando tengo un algoritmo que implica una lógica general y otra particular.
 	method puedeTrabajar(ciudad) {
@@ -42,8 +43,42 @@ class Vendedor {
 	method puntajeTotal() {
 		return certificaciones.sum({certificacion => certificacion.puntos()}) 
 	}
+	
+	
+	
+	method esInfluyente(ciudad) {
+		return self.puedeTrabajar(ciudad) and self.esFamoso()
+	}
+	
+	method esFamoso() {
+		return modoDeOperar.esFamoso(self)
+	}
+	
+	method algunaCeritificacionConMasDe(puntaje) {
+		return certificaciones.any({certificacion => certificacion.puntos() > puntaje})
+	}
 
 }
+
+// State-less: No tienen estado
+object insistente {
+	method esFamoso(vendedor) { return vendedor.esFirme() }
+}
+
+object practico {
+	method esFamoso(vendedor) { return vendedor.esVersatil() and vendedor.algunaCeritificacionConMasDe(10) }
+}
+
+
+// HERENCIA [tipo de vendedor]: 
+//  - Solo tenemos un tiro. Subclase por tipo de vendedor, entonces no puedo subclasear por ninguna otra cualidad.
+//  - Hay solamente un objeto implicado, el método llokup hace la magia.
+//  - No se puede camiar la naturaleza del objeto.
+
+// COMPOSICION (Strategy) [modo de operar]: 
+//  - Reificar (modelar) con otros objetos y usar polimorfismo. Tener otra jerarquía
+//  - Hay por lo menos 2 objetos involucrados: el principal y el compuesto.
+//  - Se puede cambiar el comportamiento en runtime.
 
 class VendedorFijo inherits Vendedor {
 
