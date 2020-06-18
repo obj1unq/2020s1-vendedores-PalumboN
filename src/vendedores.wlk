@@ -2,6 +2,10 @@ class Vendedor {
 
 	const certificaciones = []
 	var property modoDeOperar
+	
+	method agregarCertificacion(certificacion) {
+		certificaciones.add(certificacion)
+	}
 
 	// Patrón: Template method. Sirve cuando tengo un algoritmo que implica una lógica general y otra particular.
 	method puedeTrabajar(ciudad) {
@@ -56,6 +60,22 @@ class Vendedor {
 	
 	method algunaCeritificacionConMasDe(puntaje) {
 		return certificaciones.any({certificacion => certificacion.puntos() > puntaje})
+	}
+	
+	method tieneAfinidad(centro) {
+		return self.puedeTrabajar(centro.ciudad())
+	}
+	
+	method esCandidato(centro) {
+		return self.esVersatil() and self.tieneAfinidad(centro)
+	}
+	
+	method certificacionesSobreProductos() {
+		return certificaciones.filter({certificacion => certificacion.esSobreProducto()})
+	}
+	
+	method esPersonaFisica() {
+		return true
 	}
 
 }
@@ -114,7 +134,81 @@ class ComercioCorresponsal inherits Vendedor {
 		return cudadesConSucursales.contains(ciudad)
 	}
 
+	override method tieneAfinidad(centro) {
+		return super(centro) and self.existeCiudadConSucursalQueNoPuedeCubrir(centro)
+	}
+	
+	method existeCiudadConSucursalQueNoPuedeCubrir(centro) {
+		return cudadesConSucursales.any({ ciudad => not centro.puedeCubrir(ciudad) })
+	}
+	
+	override method esPersonaFisica() {
+		return false
+	}
 }
+
+
+
+class CentroDeDistribucion {
+	const property ciudad
+	const vendedores = []
+	
+	method contratar(vendedor) {
+		self.validarNoEstaContratado(vendedor)
+		vendedores.add(vendedor)
+	}
+	
+	method validarNoEstaContratado(vendedor) {
+		if (vendedores.contains(vendedor)) {
+			self.error("El vendedor ya se encuentra en el centro")
+		}
+	}
+	
+	method vendedorEstrella() {
+		return vendedores.max({vendedor => vendedor.puntajeTotal() })
+	}
+	
+	method puedeCubrir(_ciudad) {
+		return vendedores.any({vendedor => vendedor.puedeTrabajar(_ciudad) })
+	}
+	
+	method vendedoresGenericos() {
+		return vendedores.filter({vendedor => not vendedor.esInfluyente(ciudad) })
+	}
+	
+	method esRobusto() {
+		return self.cantVendedoresFirmes() >= 3
+	}
+	
+	method cantVendedoresFirmes() {
+		return vendedores.count({vendedor => vendedor.esFirme() })
+	}
+	
+	method repartirCertificacion(certificacion) {
+		vendedores.forEach({vendedor => vendedor.agregarCertificacion(certificacion) })
+	}
+}
+
+
+
+object clienteInseguro {
+	method puedeSerAtendido(vendedor) {
+		return vendedor.esVersatil() and vendedor.esFirme()
+	}
+}
+
+object clienteDetallista {
+	method puedeSerAtendido(vendedor) {
+		return vendedor.certificacionesSobreProductos().size() >= 3
+	}
+}
+
+object clienteHumanista {
+	method puedeSerAtendido(vendedor) {
+		return vendedor.esPersonaFisica()
+	}
+}
+
 
 
 
